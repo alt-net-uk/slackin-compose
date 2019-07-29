@@ -1,0 +1,31 @@
+---
+version: "3.2"
+
+networks:
+  anukslackin:
+    driver: overlay
+    attachable: true
+
+services:
+  slackin:
+    image: simonjgreen/slackin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    command: ./bin/slackin $SLACK_SUBDOMAIN $SLACK_API_TOKEN $GOOGLE_CAPTCHA_SECRET $GOOGLE_CAPTCHA_SITEKEY
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 30s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.labels.region == home
+          - node.labels.class == compute
+      labels:
+        - "traefik.frontend.rule=Host:slackin.altnet.uk"
+        - "traefik.port=3000"
+        - "traefik.docker.network=altnetuk-slackin_default"
